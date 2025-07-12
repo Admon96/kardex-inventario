@@ -1,0 +1,10 @@
+[
+    {
+        "id": "MAT0001",
+        "nombre": "Arena",
+        "precio": 289.99,
+        "categoria": "material",
+        "unidad": "m3",
+        "costo_total": 14499.5
+    }
+]

@@ -1,0 +1,12 @@
+[
+    {
+        "producto_id": "MAT0001",
+        "tipo": "entrada",
+        "cantidad": 50
+    },
+    {
+        "producto_id": "MAT0001",
+        "tipo": "salida",
+        "cantidad": 30
+    }
+]
