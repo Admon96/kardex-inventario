@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kardex - Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 30px;
+            color: #333;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #1976d2;
+        }
+        h2 {
+            margin-top: 40px;
+            margin-bottom: 10px;
+            color: #444;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 6px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 25px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+            font-size: 14px;
+        }
+        th {
+            background-color: #1976d2;
+            color: white;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background-color: #f1f7ff;
+        }
+        form.inline {
+            display: inline;
+        }
+        button {
+            padding: 7px 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: background-color 0.3s ease;
+        }
+        button.delete-btn {
+            background-color: #e53935;
+            color: white;
+        }
+        button.delete-btn:hover {
+            background-color: #ab000d;
+        }
+        button.add-move-btn {
+            background-color: #43a047;
+            color: white;
+        }
+        button.add-move-btn:hover {
+            background-color: #2e7d32;
+        }
+        .add-product-form {
+            margin-top: 30px;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            max-width: 600px;
+        }
+        .add-product-form input, .add-product-form select {
+            padding: 10px;
+            margin-right: 10px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 180px;
+            box-sizing: border-box;
+        }
+        .add-product-form button {
+            padding: 11px 20px;
+            font-size: 15px;
+            background-color: #1976d2;
+            color: white;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        .add-product-form button:hover {
+            background-color: #115293;
+        }
+        .movimientos-form select, .movimientos-form input {
+            padding: 6px 8px;
+            font-size: 13px;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .movimientos-form button {
+            padding: 6px 12px;
+            font-size: 13px;
+            background-color: #43a047;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .movimientos-form button:hover {
+            background-color: #2e7d32;
+        }
+        a.logout-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #e53935;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        a.logout-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bienvenido, {{ user }}!</h1>
+
+    {% macro mostrar_tabla_productos(productos, categoria_nombre) %}
+        <h2>{{ categoria_nombre }}</h2>
+        {% if productos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th><th>Nombre</th><th>Unidad</th><th>Entradas</th><th>Salidas</th><th>Existencia</th>
+                    <th>Precio Unitario</th><th>Costo Total</th>
+                    {% if role == 'admin' %}
+                        <th>Acciones</th><th>Agregar Movimiento</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in productos %}
+                <tr>
+                    <td>{{ p['id'] }}</td>
+                    <td>{{ p['nombre'] }}</td>
+                    <td>{{ p.get('unidad', '-') }}</td>
+                    <td>{{ p['entradas'] }}</td>
+                    <td>{{ p['salidas'] }}</td>
+                    <td>{{ p['existencia'] }}</td>
+                    <td>{{ "%.2f"|format(p['precio']) }}</td>
+                    <td>{{ "%.2f"|format(p['costo_total']) }}</td>
+                    {% if role == 'admin' %}
+                    <td>
+                        <form method="post" action="{{ url_for('eliminar_producto', prod_id=p['id']) }}" class="inline">
+                            <button type="submit" class="delete-btn" onclick="return confirm('¿Seguro que quieres eliminar este producto?');">Eliminar</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="post" action="{{ url_for('agregar_movimiento', prod_id=p['id']) }}" class="movimientos-form">
+                            <select name="tipo" required>
+                                <option value="" disabled selected>Tipo</option>
+                                <option value="entrada">Entrada</option>
+                                <option value="salida">Salida</option>
+                            </select>
+                            <input type="number" name="cantidad" min="1" placeholder="Cantidad" required>
+                            <button type="submit" class="add-move-btn">Agregar</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
+                {% if categoria_nombre == "Materiales" %}
+                <tr>
+                    <td colspan="{{ 8 if role == 'viewer' else 10 }}" style="text-align:right; font-weight:bold;">Total materiales:</td>
+                    <td style="font-weight:bold;">{{ "%.2f"|format(total_materiales) }}</td>
+                </tr>
+                {% endif %}
+            </tfoot>
+        </table>
+        {% else %}
+            <p>No hay productos en esta categoría.</p>
+        {% endif %}
+    {% endmacro %}
+
+    {% if role == 'admin' %}
+    <div class="add-product-form">
+        <h3>Agregar nuevo producto</h3>
+        <form method="post" action="{{ url_for('agregar_producto') }}">
+            <input name="nombre" placeholder="Nombre" required>
+            <input type="number" step="0.01" name="precio" placeholder="Precio Unitario" min="0" required>
+            <input name="unidad" placeholder="Unidad de medida" required>
+            <select name="categoria" required>
+                <option value="" disabled selected>Selecciona categoría</option>
+                <option value="material">Material</option>
+                <option value="herramienta">Herramienta</option>
+                <option value="equipo">Equipo de Obra</option>
+            </select>
+            <button type="submit">Agregar</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {{ mostrar_tabla_productos(materiales, "Materiales") }}
+    {{ mostrar_tabla_productos(herramientas, "Herramientas") }}
+    {{ mostrar_tabla_productos(equipos, "Equipos de Obra") }}
+
+    <a href="{{ url_for('logout') }}" class="logout-link">Cerrar sesión</a>
+</body>
+</html>
